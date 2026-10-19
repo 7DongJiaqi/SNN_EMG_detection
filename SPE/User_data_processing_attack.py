@@ -1,8 +1,5 @@
-import os
-import glob
 import numpy
-# from User_CNN_tools import *
-from User_MLP_attack import *
+from User_MLP_attack import ModelTrainer
 from copy import copy
 from scipy.signal import medfilt
 

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+data/
+outputs/
+model/
+tmp_ann.pth
+total_mean_values.txt
+.pytest_cache/

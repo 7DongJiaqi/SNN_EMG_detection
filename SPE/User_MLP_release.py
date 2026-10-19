@@ -1,6 +1,5 @@
 import numpy
 
-from imblearn.over_sampling import SMOTE
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,9 +7,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score
 #
-# from catSNN import spikeLayer, SpikeDataset ,load_model, fuse_module
-import catCuda
-import os
 
 C_level=3
 Q_level=2
@@ -28,6 +24,8 @@ def set_seeds(seed=42):
 set_seeds(seed)
 
 def create_spike_input_cuda(input,T, theta):
+    import catCuda
+
     spikes_data = [input for _ in range(T)]
     out = torch.stack(spikes_data, dim=-1).type(torch.FloatTensor).cuda() #float
     out = catCuda.getSpikes(out, theta-0.0001)
@@ -52,7 +50,7 @@ def quantize_to_bit_(x, nbit):
     return x
 
 class MLP(nn.Module):
-    def __init__(self, input_size=105, hidden_size=128, output_size=1):
+    def __init__(self, input_size=132, hidden_size=128, output_size=1):
         super(MLP, self).__init__()
 
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -79,7 +77,7 @@ class MLP(nn.Module):
         return x
     
 class MLP_snn(nn.Module):
-    def __init__(self, input_size=105, hidden_size=128, output_size=1):
+    def __init__(self, input_size=132, hidden_size=128, output_size=1):
         super(MLP_snn, self).__init__()
 
         self.fc1 = nn.Linear(input_size, hidden_size)
@@ -114,11 +112,10 @@ class MLP_snn(nn.Module):
         return x
 
 class ModelTrainer:
-    def __init__(self, model_type='mlp', input_size=105, hidden_size=128, num_channels=1, num_epochs=50, batch_size=1, lr=0.01, user=0, loadpath=None, savepath='model/cq'):
+    def __init__(self, model_type='mlp', input_size=132, hidden_size=128, num_epochs=50, batch_size=1, lr=0.01, user=0, loadpath=None, savepath='model/cq'):
         self.model_type = model_type.lower()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.num_channels = num_channels
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.lr = lr
@@ -131,13 +128,9 @@ class ModelTrainer:
         self.model_save_path = f'{self.savepath}/{self.user}.pth'
         self.log_file_path = f'{self.savepath}/log.txt'
 
-        if self.model_type == 'mlp':
-            self.model = MLP(self.input_size, self.hidden_size)
-
-        elif self.model_type == 'cnn':
-            self.model = CNN_cq(self.input_size, num_channels)
-        else:
-            raise ValueError("Unsupported model type. Choose 'mlp' or 'cnn'.")
+        if self.model_type != 'mlp':
+            raise ValueError("Unsupported model type. Choose 'mlp'.")
+        self.model = MLP(self.input_size, self.hidden_size)
         self.model = self.model.to(self.device)
         self.snn = MLP_snn(self.input_size, self.hidden_size).to(self.device)
         self.criterion = nn.BCELoss()
@@ -247,111 +240,3 @@ class ModelTrainer:
         print("Confusion Matrix:\n", confusion_mat)
         print("F1 Score:", f1_score_val)
         return predictions,probabilities,confusion_mat
-
-
-
-
-def listOfFeatures2Matrix(features):
-    '''
-    listOfFeatures2Matrix(features)
-
-    This function takes a list of feature matrices as argument and returns a single concatenated feature matrix and the respective class labels.
-
-    ARGUMENTS:
-        - features:        a list of feature matrices
-
-    RETURNS:
-        - X:            a concatenated matrix of features
-        - Y:            a vector of class indeces
-    '''
-
-    X = numpy.array([])
-    Y = numpy.array([])
-    for i, f in enumerate(features):
-        if i == 0:
-            X = f
-            Y = i * numpy.ones((len(f), 1))
-        else:
-            X = numpy.vstack((X, f))
-            Y = numpy.append(Y, i * numpy.ones((len(f), 1)))
-    return (X, Y)
-
-
-'''
-def normalizeFeatures(features):
-    X = numpy.array([])
-    for count, f in enumerate(features):
-        if f.shape[0] > 0:
-            if count == 0:
-                X = f
-            else:
-                X = numpy.vstack((X, f))
-            count += 1
-
-    MEAN = numpy.mean(X, axis=0) + 0.00000000000001;
-    STD = numpy.std(X, axis=0) + 0.00000000000001;
-
-    features_norm = []
-    for f in features:
-        ft = f.copy()
-        for n_samples in range(f.shape[0]):
-            ft[n_samples, :] = (ft[n_samples, :] - MEAN) / STD
-        features_norm.append(ft)
-    return (features_norm, MEAN, STD)
-'''
-
-
-
-
-def normalizeFeaturesWithoutSMOTE(features):
-
-    X = numpy.array([])
-
-    for count, f in enumerate(features):
-        if f.shape[0] > 0:
-            if count == 0:
-                X = f
-            else:
-                X = numpy.vstack((X, f))
-            count += 1
-
-    MEAN = numpy.mean(X, axis=0) + 0.00000000000001;
-    STD = numpy.std(X, axis=0) + 0.00000000000001;
-
-    features_norm = []
-    for f in features:
-        ft = f.copy()
-        for n_samples in range(f.shape[0]):
-            ft[n_samples, :] = (ft[n_samples, :] - MEAN) / STD
-        features_norm.append(ft)
-    return (features_norm, MEAN, STD)
-
-
-#后smote
-def normalizeFeaturesWithSMOTE(features):
-    X = numpy.vstack(features)
-    Y = numpy.hstack([numpy.full((feat.shape[0],), i) for i, feat in enumerate(features)])
-
-    MEAN = numpy.mean(X, axis=0)
-    STD = numpy.std(X, axis=0) + 1e-8
-    X_norm = (X - MEAN) / STD
-    smote = SMOTE(random_state=42)
-    X_res, Y_res = smote.fit_resample(X_norm, Y)
-
-    features_norm = []
-    for label in numpy.unique(Y_res):
-        ft = X_res[Y_res == label]
-        features_norm.append(ft)
-
-    return (features_norm, MEAN, STD)
-
-
-
-def normalizeFeatures(trNF, trF):
-
-    if len(trNF)+len(trF)<150:
-        print("SMOTE")
-        return normalizeFeaturesWithoutSMOTE([trNF, trF])
-    else:
-        print("NO SMOTE")
-        return normalizeFeaturesWithoutSMOTE([trNF, trF])

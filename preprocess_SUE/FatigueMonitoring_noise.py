@@ -1,19 +1,15 @@
-from EMG_training import evaluateClassifier
-from EMG_training import featureExtraction
 from EMG_training import Classify
 
 
 import os
 import glob
 import numpy
-from pyAudioAnalysis import audioTrainTest as aT
 from scipy.signal import medfilt
 import Classification as clf
 from copy import copy
 
 import csv
 
-import numpy as np
 import random
 import tensorflow as tf
 
@@ -22,10 +18,9 @@ os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 random.seed(42)
 
-np.random.seed(42)
+numpy.random.seed(42)
 
 tf.random.set_seed(42)
-import tensorflow as tf
 
 def add_noise_tf(data, noise_type=1, epsilon=0.1):
     data_tensor = tf.convert_to_tensor(data, dtype=tf.float32)
@@ -221,7 +216,6 @@ def GroupClassification(train, test, classifier, param, test_ids, eval_source):
     CM = numpy.zeros((2, 2))
     CM_post = numpy.zeros((2, 2))
     CM_post_2 = numpy.zeros((2, 2))
-    # from lists to matrices
     trNF = numpy.concatenate(train[0])
     trF = numpy.concatenate(train[1])
     print("trNF", len(trNF))

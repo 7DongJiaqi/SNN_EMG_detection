@@ -1,8 +1,7 @@
 import os
 import glob
 import numpy
-from User_MLP_quantize import *
-# from try1 import *
+from User_MLP_quantize import ModelTrainer, listOfFeatures2Matrix, normalizeFeatures
 from copy import copy
 from scipy.signal import medfilt
 from sklearn.metrics import confusion_matrix
@@ -187,7 +186,6 @@ def GroupClassification(train,test,classifier,num_epochs,batch_size,lr,user, loa
     CM = numpy.zeros((2, 2))
     CM_post = numpy.zeros((2, 2))
     CM_post_2 = numpy.zeros((2, 2))
-    # from lists to matrices
     trNF = numpy.concatenate(train[0])
     trF = numpy.concatenate(train[1])
     # print("trNF",len(trNF))
@@ -236,6 +234,8 @@ def DataCollect(filelist,test_id):
     data.close()
 
     for file in filelist:
+        if file == test_id:
+            continue
         with numpy.load(file) as data:
             train_data_NF.append(data[list(data.keys())[0]])
         data.close()
@@ -265,7 +265,7 @@ def SingleUserEvaluation(dirName,classifier,num_epochs,batch_size,lr,loadpath=No
         CM = numpy.zeros((2, 2))
         CM_post = numpy.zeros((2, 2))
         CM_post2 = numpy.zeros((2, 2))
-        user_files = filter(lambda x:x.split('/')[-1].split('_')[0] == user,fileList)
+        user_files = [x for x in fileList if os.path.basename(x).split('_')[0] == user]
 
         for file_test in user_files:
             # print("file_test",file_test)

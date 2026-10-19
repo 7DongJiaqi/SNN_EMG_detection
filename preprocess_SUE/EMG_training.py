@@ -1,11 +1,8 @@
 import sys
 import glob
 import os
-import math
-import matplotlib.pyplot as plt
 import numpy as np
 import FeatureExtraction_1D as f1d
-from pyAudioAnalysis import audioTrainTest as aT
 import pickle as cPickle
 
 import Classification 
@@ -65,6 +62,8 @@ def stLabelsExtraction(labels, Fs, Win, Step):
 
 
 def showEMGData(data,duration,gt):
+    import matplotlib.pyplot as plt
+
 
     Fs = round(len(data) / float(duration))
     fatigue_thresh = gt.index(1)
@@ -103,6 +102,8 @@ def featureExtraction(raw_data,time,gt_labels,mW,mS,sW,sS):
 
 
 def evaluateClassifier(argv):
+    from pyAudioAnalysis import audioTrainTest as aT
+
     save = argv[5]
 
     dirName = argv[2]    # path to csv files

@@ -1,7 +1,5 @@
 import glob
 import os.path
-import numpy
-from shutil import copyfile
 import pandas as pd
 import numpy as np
 import scipy.signal as signal

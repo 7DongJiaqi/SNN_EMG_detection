@@ -2,15 +2,12 @@ import numpy
 import torch
 import torch.nn as nn
 
-import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import confusion_matrix, f1_score, accuracy_score
 
-from catSNN import spikeLayer, SpikeDataset ,load_model, fuse_module
-import catCuda
+
 
 
 C_level=3
@@ -19,6 +16,8 @@ seed=99
 quantized_weight=32
 
 def create_spike_input_cuda(input,T, theta):
+    import catCuda
+
     spikes_data = [input for _ in range(T)]
     out = torch.stack(spikes_data, dim=-1).type(torch.FloatTensor).cuda() #float
     out = catCuda.getSpikes(out, theta-0.0001)
@@ -120,11 +119,10 @@ class MLP_snn(nn.Module):
         return x
 
 class ModelTrainer:
-    def __init__(self, model_type='mlp', input_size=132, hidden_size=128, num_channels=1, num_epochs=50, batch_size=1, lr=0.01, user=0, loadpath=None, savepath='model/cq'):
+    def __init__(self, model_type='mlp', input_size=132, hidden_size=128, num_epochs=50, batch_size=1, lr=0.01, user=0, loadpath=None, savepath='model/cq'):
         self.model_type = model_type.lower()
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.num_channels = num_channels
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.lr = lr
@@ -137,13 +135,9 @@ class ModelTrainer:
         self.model_save_path = f'{self.savepath}/{self.user}.pth'
         self.log_file_path = f'{self.savepath}/log.txt'
 
-        if self.model_type == 'mlp':
-            self.model = MLP(self.input_size, self.hidden_size)
-
-        elif self.model_type == 'cnn':
-            self.model = CNN_cq(self.input_size, num_channels)
-        else:
-            raise ValueError("Unsupported model type. Choose 'mlp' or 'cnn'.")
+        if self.model_type != 'mlp':
+            raise ValueError("Unsupported model type. Choose 'mlp'.")
+        self.model = MLP(self.input_size, self.hidden_size)
         self.model = self.model.to(self.device)
         self.snn = MLP_snn(self.input_size, self.hidden_size).to(self.device)
         self.criterion = nn.BCELoss()

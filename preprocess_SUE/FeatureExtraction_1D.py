@@ -1,6 +1,5 @@
 import numpy
 from scipy.fftpack import fft
-import sys
 
 eps = 0.00000001
 
@@ -191,7 +190,6 @@ def stFeatureExtraction2(signal,Fs, Win, Step):
 
 
         # ------DELTAS-------#
-        # TODO: TEST DELTA
 
         # if countFrames > 1:
         #     curFV[numOfTimeSpectralFeatures / 2::] = curFV[0:numOfTimeSpectralFeatures / 2] - prevFV[0:numOfTimeSpectralFeatures / 2]

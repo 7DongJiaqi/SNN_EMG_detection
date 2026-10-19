@@ -1,8 +1,5 @@
-import os
-import glob
 import numpy
-# from User_CNN_tools import *
-from User_MLP_release import *
+from User_MLP_release import ModelTrainer
 from copy import copy
 from scipy.signal import medfilt
 
@@ -161,7 +158,7 @@ def postProcessing_2(predictions, filter=True):
     # print("post_predictions_2",post_predictions)
     return post_predictions
 
-def PrintResults(s,str,CM,CM_post, CM_post2, filename='mlp/105_99'):
+def PrintResults(s,str,CM,CM_post, CM_post2, filename='mlp/132_99'):
     '''
     Prints results before and after post-processing
     '''
@@ -203,7 +200,7 @@ def GroupClassification(train, test, classifier_type, num_epochs, batch_size, lr
     print("Post-processed Predictions:", post_predictions)
     print("Post2-processed Predictions:", post2_predictions)
 
-    with open("mlp/105_99.txt", 'a') as f:
+    with open("mlp/132_99.txt", 'a') as f:
         f.write("Ground Truth: ")
         for item in y_test:
             f.write(f"{item} ")
@@ -265,7 +262,7 @@ def SingleUserEvaluation(dirName, classifier, num_epochs, batch_size, lr):
 
     for user_id in [f"{i:02d}" for i in range(1, 31)]:
         print("\nTesting on user:", user_id)
-        with open("mlp/105_99.txt", 'a') as f:
+        with open("mlp/132_99.txt", 'a') as f:
             f.write(user_id+":\n")
         data_NF, data_F = LoadDataForUser(dirName, user_id)
         print(f"Data sizes - NF: {len(data_NF)}, F: {len(data_F)}")

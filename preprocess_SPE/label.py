@@ -12,7 +12,7 @@ for xx in range(1, 31):  # Loop from 01 to 30
         file_name = f".\\preprocessed\\{xx:02d}_sensor{Y}_labelled.csv"
         try:
             # Try to read the file
-            df = pd.read_csv(file_name)
+            df = pd.read_csv(file_name, header=None)
 
             # Filter rows based on the last column and save them
             for condition, suffix in ((1, "F"), (0, "NF")):
